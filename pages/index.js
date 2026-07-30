@@ -1,3 +1,23 @@
+import Head from "next/head";
+
 export default function Home() {
-  return <h1>"Nayara eu te amo!"</h1>;
+  return (
+    <>
+      <Head>
+        <title>Site em construção</title>
+        <meta charSet="UTF-8" />
+        <link rel="stylesheet" href="/style.css" />
+      </Head>
+      <div className="rule-top"></div>
+      <span className="kicker">— Em breve</span>
+      <h1>
+        Site em
+        <br />
+        construção
+      </h1>
+      <div className="bar"></div>
+      <p>Uma nova versão está a caminho.</p>
+      <div className="rule-bottom"></div>
+    </>
+  );
 }

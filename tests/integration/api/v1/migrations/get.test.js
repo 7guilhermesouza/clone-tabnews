@@ -1,9 +1,10 @@
 import database from "infra/database.js";
+import { waitForAllServices } from "tests/orchestrator";
 
-async function cleanDatabase() {
+beforeAll(async () => {
+  await waitForAllServices();
   await database.query("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
-}
-beforeAll(cleanDatabase);
+});
 
 test("GET to /migrations should be return 200", async () => {
   const response = await fetch("http://localhost:3000/api/v1/migrations");

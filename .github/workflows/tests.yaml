@@ -1,0 +1,20 @@
+name: Automated tests
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  jest:
+    name: JestUbuntu
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Setup of node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/hydrogen"
+      - name: Copu codebase to ci
+        uses: actions/checkout@v4
+      - name: Installing dependencies
+        run: npm ci
+      - name: Test
+        run: npm test

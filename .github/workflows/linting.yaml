@@ -1,0 +1,20 @@
+name: Linting
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  Prettier:
+    name: Prettier
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Setup of node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/hydrogen"
+      - name: Copy codebase to CI
+        uses: actions/checkout@v4
+      - name: Installing dependencies
+        run: npm ci
+      - name: Prettier check
+        run: npm run lint:prettier:check

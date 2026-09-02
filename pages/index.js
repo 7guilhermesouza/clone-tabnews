@@ -6,7 +6,6 @@ export default function Home() {
       <Head>
         <title>Site em construção</title>
         <meta charSet="UTF-8" />
-        <link rel="stylesheet" href="/style.css" />
       </Head>
       <div className="rule-top"></div>
       <span className="kicker">— Em breve</span>

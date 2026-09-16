@@ -4,7 +4,7 @@ on:
     branches:
       - main
 jobs:
-  jest:
+  Jest:
     name: JestUbuntu
     runs-on: ubuntu-24.04
     steps:
@@ -12,7 +12,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "lts/hydrogen"
-      - name: Copu codebase to ci
+      - name: Copy codebase to ci
         uses: actions/checkout@v4
       - name: Installing dependencies
         run: npm ci

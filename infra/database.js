@@ -19,7 +19,7 @@ async function getNewClient() {
     password: process.env.POSTGRES_PASSWORD,
     ssl: getSSLValues(),
   });
-  client.connect();
+  await client.connect();
   return client;
 }
 async function query(queryObject) {
@@ -29,10 +29,11 @@ async function query(queryObject) {
     const result = await client.query(queryObject);
     return result;
   } catch (error) {
+    console.log("\n Erro dentro do catch do database.js:\n");
     console.error(error);
     throw error;
   } finally {
-    client.end();
+    await client?.end();
   }
 }
 

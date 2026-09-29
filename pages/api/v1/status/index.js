@@ -1,6 +1,12 @@
 import database from "@/infra/database.js";
+import { createRouter } from "next-connect";
+import controllers from "@/infra/controllers.js";
 
-export default async function status(request, response) {
+const router = createRouter();
+router.get(getHandler);
+export default router.handler(controllers.handlers);
+
+async function getHandler(request, response) {
   const updatedAt = new Date().toISOString();
   const version = await database.query("SHOW server_version;");
   const maxConnections = await database.query("SHOW max_connections;");

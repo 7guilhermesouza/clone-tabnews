@@ -1,4 +1,5 @@
 import { Client } from "pg";
+import { ServiceError } from "@/infra/errors.js";
 
 function getSSLValues() {
   if (process.env.POSTGRES_CA) {
@@ -19,7 +20,7 @@ async function getNewClient() {
     password: process.env.POSTGRES_PASSWORD,
     ssl: getSSLValues(),
   });
-  client.connect();
+  await client.connect();
   return client;
 }
 async function query(queryObject) {
@@ -29,10 +30,13 @@ async function query(queryObject) {
     const result = await client.query(queryObject);
     return result;
   } catch (error) {
-    console.error(error);
-    throw error;
+    const serviceErrorObject = new ServiceError({
+      cause: error,
+      message: "Erro de conexão ou de consulta ao banco de dados.",
+    });
+    throw serviceErrorObject;
   } finally {
-    client.end();
+    await client?.end();
   }
 }
 

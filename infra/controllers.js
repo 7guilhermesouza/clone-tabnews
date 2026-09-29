@@ -7,10 +7,12 @@ function onNoMatchHandler(request, response) {
 }
 
 function onErrorHandler(error, request, response) {
-  const publicErrorObject = new InternalServerError({ cause: error });
-  console.log("\n Erro dentro do catch do controller:");
+  const publicErrorObject = new InternalServerError({
+    cause: error,
+    statusCode: error.statusCode,
+  });
   console.error(publicErrorObject);
-  response.status(500).json(publicErrorObject);
+  response.status(publicErrorObject.statusCode).json(publicErrorObject);
 }
 
 export default {

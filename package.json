@@ -41,6 +41,7 @@
   "devDependencies": {
     "@commitlint/cli": "19.4.0",
     "@commitlint/config-conventional": "19.2.2",
+    "@secretlint/secretlint-rule-filter-comments": "^13.0.6",
     "@secretlint/secretlint-rule-pattern": "13.0.5",
     "@secretlint/secretlint-rule-preset-recommend": "13.0.5",
     "commitizen": "4.3.2",

@@ -55,3 +55,23 @@ export class ServiceError extends Error {
     };
   }
 }
+
+export class ValidationError extends Error {
+  constructor({ message, action }) {
+    super(message || "Não foi possível validar os dados enviados.");
+    this.name = "ValidationError";
+    this.action =
+      action ||
+      "Dados inválidos. Por favor, confira os dados e tente novamente.";
+    this.statusCode = 400;
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      action: this.action,
+      status_code: this.statusCode,
+    };
+  }
+}

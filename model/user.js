@@ -1,9 +1,12 @@
+/* secretlint-disable -- as senhas não são exposta aqui, apenas tratadas e criadas o hash. */
 import database from "@/infra/database.js";
 import { ValidationError, NotFoundError } from "@/infra/errors";
+import password from "@/model/password.js";
 
 async function create(userInputValues) {
   await validateUniqueEmail(userInputValues.email);
   await validateUniqueUsername(userInputValues.username);
+  await hashPasswordInObject(userInputValues);
   const newUser = await runInsertUser(userInputValues);
   return newUser;
 
@@ -38,6 +41,11 @@ async function create(userInputValues) {
     if (result.rowCount > 0) {
       throw new ValidationError({});
     }
+  }
+
+  async function hashPasswordInObject(userInputValues) {
+    const hashedPassword = await password.hash(userInputValues.password);
+    userInputValues.password = hashedPassword;
   }
   async function runInsertUser(userInputValues) {
     const result = await database.query({

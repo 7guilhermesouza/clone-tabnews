@@ -2,6 +2,8 @@
 import orchestrator from "tests/orchestrator";
 import { describe, expect, test } from "@jest/globals";
 import { version as uuidVersion } from "uuid";
+import user from "@/model/user.js";
+import password from "@/model/password.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -11,17 +13,18 @@ beforeAll(async () => {
 
 describe("Create a user via POST request to /users", () => {
   describe("Anonymous user", () => {
+    const userInput = {
+      username: "Guilhermesouza",
+      email: "Guilherme@exemplo.com",
+      password: "Senha@123",
+    };
     test("With unique and valid data", async () => {
       const response = await fetch("http://localhost:3000/api/v1/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          username: "Guilhermesouza",
-          email: "Guilherme@exemplo.com",
-          password: "Senha@123",
-        }),
+        body: JSON.stringify(userInput),
       });
 
       expect(response.status).toBe(201);
@@ -31,13 +34,25 @@ describe("Create a user via POST request to /users", () => {
         id: responseBody.id,
         username: "Guilhermesouza",
         email: "Guilherme@exemplo.com",
-        password: "Senha@123",
+        password: responseBody.password,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
+      const createdUser = await user.findOneByUsername(userInput.username);
+      const correctPasswordMatch = await password.compare(
+        userInput.password,
+        createdUser.password,
+      );
+      expect(correctPasswordMatch).toBe(true);
+
+      const wrongPasswordMatch = await password.compare(
+        "wrongPassword",
+        createdUser.password,
+      );
+      expect(wrongPasswordMatch).toBe(false);
     });
 
     test("With duplicated email", async () => {
@@ -55,8 +70,6 @@ describe("Create a user via POST request to /users", () => {
           }),
         },
       );
-      //const validUserResponseBody = await validUserResponse.json();
-      console.log(validUserResponse);
       expect(validUserResponse.status).toBe(201);
 
       const duplicatedUserResponse = await fetch(

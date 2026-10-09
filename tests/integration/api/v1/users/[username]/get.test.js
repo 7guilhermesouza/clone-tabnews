@@ -12,82 +12,51 @@ beforeAll(async () => {
 describe("GET to `api/v1/users/[username]`", () => {
   describe("With Anonymous user", () => {
     test("With exact case", async () => {
-      const userSameCaseResponse = await fetch(
-        "http://localhost:3000/api/v1/users",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username: "samecase",
-            email: "same.case@exemplo.com",
-            password: "senha123",
-          }),
-        },
+      const createdUser = await orchestrator.createUser();
+      const response = await fetch(
+        `http://localhost:3000/api/v1/users/${createdUser.username}`,
       );
 
-      expect(userSameCaseResponse.status).toBe(201);
+      expect(response.status).toBe(200);
 
-      const userSameCaseFoundedResponse = await fetch(
-        "http://localhost:3000/api/v1/users/samecase",
-      );
-
-      expect(userSameCaseFoundedResponse.status).toBe(200);
-      const userSameCaseResponseBody = await userSameCaseResponse.json();
-      expect(userSameCaseResponseBody).toEqual({
-        id: userSameCaseResponseBody.id,
-        username: "samecase",
-        email: "same.case@exemplo.com",
-        password: userSameCaseResponseBody.password,
-        created_at: userSameCaseResponseBody.created_at,
-        updated_at: userSameCaseResponseBody.updated_at,
+      const responseBody = await response.json();
+      expect(responseBody).toEqual({
+        id: responseBody.id,
+        username: createdUser.username,
+        email: createdUser.email,
+        password: responseBody.password,
+        created_at: responseBody.created_at,
+        updated_at: responseBody.updated_at,
       });
     });
 
     test("With diferent case", async () => {
-      const userDiferentCaseResponse = await fetch(
-        "http://localhost:3000/api/v1/users",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username: "diferentcase",
-            email: "diferent.case@exemplo.com",
-            password: "senha123",
-          }),
-        },
+      const createdUser = await orchestrator.createUser();
+
+      const response = await fetch(
+        `http://localhost:3000/api/v1/users/${createdUser.username.toUpperCase()}`,
       );
 
-      expect(userDiferentCaseResponse.status).toBe(201);
-
-      const userDiferentCaseFoundedResponse = await fetch(
-        "http://localhost:3000/api/v1/users/DIFERENTCASE",
-      );
-
-      expect(userDiferentCaseFoundedResponse.status).toBe(200);
-      const userDiferentCaseResponseBody =
-        await userDiferentCaseResponse.json();
-      expect(userDiferentCaseResponseBody).toEqual({
-        id: userDiferentCaseResponseBody.id,
-        username: "diferentcase",
-        email: "diferent.case@exemplo.com",
-        password: userDiferentCaseResponseBody.password,
-        created_at: userDiferentCaseResponseBody.created_at,
-        updated_at: userDiferentCaseResponseBody.updated_at,
+      expect(response.status).toBe(200);
+      const responseBody = await response.json();
+      expect(responseBody).toEqual({
+        id: responseBody.id,
+        username: createdUser.username,
+        email: createdUser.email,
+        password: responseBody.password,
+        created_at: responseBody.created_at,
+        updated_at: responseBody.updated_at,
       });
     });
 
     test("With nonexistent username", async () => {
-      const userNonExistentResponse = await fetch(
+      const response = await fetch(
         "http://localhost:3000/api/v1/users/userNonExist",
       );
 
-      expect(userNonExistentResponse.status).toBe(404);
-      const userNonExistentResponseBody = await userNonExistentResponse.json();
-      expect(userNonExistentResponseBody).toEqual({
+      expect(response.status).toBe(404);
+      const responseBody = await response.json();
+      expect(responseBody).toEqual({
         name: "NotFoundError",
         message: "Não foram encontrados registros com os dados solicitados.",
         action:

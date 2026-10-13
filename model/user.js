@@ -142,9 +142,34 @@ async function update(username, userInput) {
   }
 }
 
+async function findOneByEmail(email) {
+  const foundUser = await findOne(email);
+  return foundUser;
+
+  async function findOne(email) {
+    const result = await database.query({
+      text: `
+      SELECT
+        *
+      FROM
+        users
+      WHERE
+        email = $1;`,
+      values: [email],
+    });
+
+    if (result.rowCount === 0) {
+      throw new NotFoundError({});
+    }
+
+    return result.rows[0];
+  }
+}
+
 const user = {
   create,
   findOneByUsername,
+  findOneByEmail,
   update,
 };
 

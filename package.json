@@ -16,6 +16,7 @@
     "lint:prettier:check": "prettier --check .",
     "lint:prettier:fix": "prettier --write .",
     "lint:eslint:check": "next lint --dir .",
+    "lint:secretlint": "secretlint \"**/*\"",
     "migrations:create": "node-pg-migrate --migrations-dir infra/migrations create",
     "migrations:up": "node-pg-migrate --migrations-dir infra/migrations --envPath .env.development up",
     "migrations:get": "node-pg-migrate --dry-run true --verbose true --migrations-dir infra/migrations --envPath .env.development up",
@@ -67,6 +68,6 @@
     }
   },
   "lint-staged": {
-    "*": "secretlint"
+    "!(.*)*": "secretlint"
   }
 }

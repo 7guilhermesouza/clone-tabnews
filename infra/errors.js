@@ -57,8 +57,8 @@ export class ServiceError extends Error {
 }
 
 export class ValidationError extends Error {
-  constructor({ message, action }) {
-    super(message || "Não foi possível validar os dados enviados.");
+  constructor({ message, action, cause }) {
+    super(message || "Não foi possível validar os dados enviados.", { cause });
     this.name = "ValidationError";
     this.action =
       action ||
@@ -86,6 +86,24 @@ export class NotFoundError extends Error {
       action ||
       "Registros não encontrados. Por favor, confira os dados e tente novamente.";
     this.statusCode = 404;
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      action: this.action,
+      status_code: this.statusCode,
+    };
+  }
+}
+
+export class UnauthorizedError extends Error {
+  constructor({ cause, message }) {
+    super(message || "Credenciais não confere.", { cause });
+    this.name = "UnauthorizedError";
+    this.action = "Por favor, confira os dados enviados.";
+    this.statusCode = 401;
   }
 
   toJSON() {

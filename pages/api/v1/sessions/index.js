@@ -1,11 +1,12 @@
 import { createRouter } from "next-connect";
-import * as cookie from "cookie";
-import controllers from "@/infra/controllers";
+import controllers from "@/infra/controllers.js";
 import authentication from "@/model/authentication.js";
 import session from "@/model/session.js";
+import controller from "@/infra/controllers.js";
 
 const router = createRouter();
 router.post(postHandler);
+router.delete(deleteHandler);
 export default router.handler(controllers.handlers);
 
 async function postHandler(request, response) {
@@ -15,12 +16,16 @@ async function postHandler(request, response) {
     userInputValues.password,
   );
   const newSession = await session.create(authenticatedUser.id);
-  const setCookie = cookie.serialize("session_id", newSession.token, {
-    path: "/",
-    maxAge: session.EXPIRATION_IN_MILLISECONDS / 1000,
-    secure: process.env.NODE_ENV === "production",
-    httpOnly: true,
-  });
-  response.setHeader("Set-Cookie", setCookie);
+  controllers.setSessionCookie(newSession.token, response);
+
   return response.status(201).json(newSession);
+}
+
+async function deleteHandler(request, response) {
+  const receivedToken = request.cookies.session_id;
+  const foundedSession = await session.findOneValidByToken(receivedToken);
+  const expiredSession = await session.expireById(foundedSession.id);
+  controller.clearSessionCookie(response);
+
+  return response.status(200).json(expiredSession);
 }

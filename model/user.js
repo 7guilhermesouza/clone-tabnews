@@ -69,6 +69,32 @@ async function create(userInputValues) {
   }
 }
 
+async function findOneById(id) {
+  const foundUser = findOne(id);
+  return foundUser;
+
+  async function findOne(id) {
+    const result = await database.query({
+      text: `
+      SELECT
+        *
+      FROM
+        users
+      WHERE
+        id = $1
+      LIMIT
+        1;`,
+      values: [id],
+    });
+
+    if (result.rowCount === 0) {
+      throw new NotFoundError({});
+    }
+
+    return result.rows[0];
+  }
+}
+
 async function findOneByUsername(username) {
   const foundUser = await findOne(username);
   return foundUser;
@@ -168,6 +194,7 @@ async function findOneByEmail(email) {
 
 const user = {
   create,
+  findOneById,
   findOneByUsername,
   findOneByEmail,
   update,

@@ -35,6 +35,7 @@ describe("Create a user via POST request to /users", () => {
         username: "Guilhermesouza",
         email: "Guilherme@exemplo.com",
         password: responseBody.password,
+        features: [],
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });

@@ -30,6 +30,4 @@ describe("infra/email.js", () => {
     expect(lastEmail.subject).toBe("Segundo email");
     expect(lastEmail.text).toBe("Este é o corpo do segundo email enviado.\r\n");
   });
-
-  test("Clear inbox", async () => {});
 });

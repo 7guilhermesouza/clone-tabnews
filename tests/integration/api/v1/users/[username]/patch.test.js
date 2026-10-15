@@ -86,6 +86,7 @@ describe("PATCH to `ap1/v1/users/[username]", () => {
         username: "Romario",
         email: user1.email,
         password: responseBody.password,
+        features: [],
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
@@ -115,6 +116,7 @@ describe("PATCH to `ap1/v1/users/[username]", () => {
         username: "BaixinhoRomario",
         email: "baixinho.romario@gmail.com",
         password: responseBody.password,
+        features: [],
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });

@@ -1,11 +1,14 @@
+import { NotFoundError, UnauthorizedError } from "@/infra/errors.js";
 import user from "@/model/user.js";
 import password from "@/model/password.js";
-import { NotFoundError, UnauthorizedError } from "@/infra/errors.js";
+import authorization from "./authorization.js";
 
 async function getAuthenticatedUser(providedEmail, providedPassword) {
   try {
     const foundUser = await validateEmail(providedEmail);
+    authorization.can(foundUser, "create:session");
     await validatePassword(providedPassword, foundUser.password);
+
     return foundUser;
   } catch (error) {
     if (error instanceof UnauthorizedError) {

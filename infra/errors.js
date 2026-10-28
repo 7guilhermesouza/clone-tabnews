@@ -115,3 +115,26 @@ export class UnauthorizedError extends Error {
     };
   }
 }
+
+export class ForbiddenError extends Error {
+  constructor({ cause, message }) {
+    super(
+      message ||
+        "Acesso negado. Você não tem permissão para executar esta ação.",
+      { cause },
+    );
+    this.name = "ForbiddenError";
+    this.action =
+      "Por favor, verifique suas permissões com os administradores ou entre em contato com o suporte.";
+    this.statusCode = 403;
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      action: this.action,
+      status_code: this.statusCode,
+    };
+  }
+}

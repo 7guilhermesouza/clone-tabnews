@@ -1,21 +1,41 @@
 import { createRouter } from "next-connect";
 import controllers from "@/infra/controllers.js";
 import user from "@/model/user.js";
+import authorization from "@/model/authorization.js";
 
 const router = createRouter();
-router.get(getHandler);
-router.patch(patchHandler);
+router.use(controllers.injectUser);
+router.get(controllers.canRequest("read:user"), getHandler);
+router.patch(controllers.canRequest("update:user"), patchHandler);
 export default router.handler(controllers.handlers);
 
 async function getHandler(request, response) {
   const username = request.query.username;
-  const foundUser = await user.findOneByUsername(username);
-  return response.status(200).json(foundUser);
+  const userRequester = request.context.user;
+  const targetUser = await user.findOneByUsername(username);
+  const secureOutput = authorization.filterOutput(
+    userRequester,
+    "read:user",
+    targetUser,
+  );
+
+  return response.status(200).json(secureOutput);
 }
 
 async function patchHandler(request, response) {
   const username = request.query.username;
   const userInput = request.body;
-  const updatedUser = await user.update(username, userInput);
-  return response.status(200).json(updatedUser);
+  const userRequester = request.context.user;
+
+  const targetUser = await user.findOneByUsername(username);
+  authorization.can(userRequester, "update:user", targetUser);
+
+  const updatedUser = await user.update({ username, values: userInput });
+
+  const secureOutput = authorization.filterOutput(
+    userRequester,
+    "read:user",
+    updatedUser,
+  );
+  return response.status(200).json(secureOutput);
 }

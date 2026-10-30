@@ -70,5 +70,8 @@
   },
   "lint-staged": {
     "!(.*)*": "secretlint"
+  },
+  "engines": {
+    "node": "24"
   }
 }

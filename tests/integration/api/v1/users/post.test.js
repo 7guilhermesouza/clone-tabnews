@@ -18,6 +18,12 @@ describe("Create a user via POST request to /users", () => {
       email: "Guilherme@exemplo.com",
       password: "Senha@123",
     };
+
+    const duplicatedUserInputValues = {
+      username: "UsuarioEmailDuplicado",
+      email: "duplicado@exemplo.com",
+    };
+
     test("With unique and valid data", async () => {
       const response = await fetch("http://localhost:3000/api/v1/users", {
         method: "POST",
@@ -32,15 +38,15 @@ describe("Create a user via POST request to /users", () => {
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         id: responseBody.id,
-        username: "Guilhermesouza",
-        email: "Guilherme@exemplo.com",
-        password: responseBody.password,
+        username: userInput.username,
+        features: ["read:activation_token"],
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
+
       const createdUser = await user.findOneByUsername(userInput.username);
       const correctPasswordMatch = await password.compare(
         userInput.password,
@@ -56,22 +62,10 @@ describe("Create a user via POST request to /users", () => {
     });
 
     test("With duplicated email", async () => {
-      const validUserResponse = await fetch(
-        "http://localhost:3000/api/v1/users",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username: "UsuarioEmailDuplicado",
-            email: "duplicado@exemplo.com",
-            password: "senha123",
-          }),
-        },
-      );
-      expect(validUserResponse.status).toBe(201);
-
+      await orchestrator.createUser({
+        username: duplicatedUserInputValues.username,
+        email: duplicatedUserInputValues.email,
+      });
       const duplicatedUserResponse = await fetch(
         "http://localhost:3000/api/v1/users",
         {
@@ -80,15 +74,15 @@ describe("Create a user via POST request to /users", () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            username: "UsuarioComEmailDuplicado",
-            email: "DUPLICADO@exemplo.com",
+            username: "AlgumUser",
+            email: duplicatedUserInputValues.email,
             password: "senha123",
           }),
         },
       );
-      const duplicatedUserResponseBody = await duplicatedUserResponse.json();
-      console.log(duplicatedUserResponseBody);
       expect(duplicatedUserResponse.status).toBe(400);
+
+      const duplicatedUserResponseBody = await duplicatedUserResponse.json();
       expect(duplicatedUserResponseBody).toEqual({
         name: "ValidationError",
         message: "Não foi possível validar os dados enviados.",
@@ -99,24 +93,7 @@ describe("Create a user via POST request to /users", () => {
     });
 
     test("With duplicated username", async () => {
-      const validUserResponse = await fetch(
-        "http://localhost:3000/api/v1/users",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username: "UsernameDuplicado",
-            email: "userduplicado@exemplo.com",
-            password: "senha123",
-          }),
-        },
-      );
-      //const validUserResponseBody = await validUserResponse.json();
-      console.log(validUserResponse);
-      expect(validUserResponse.status).toBe(201);
-
+      // Usuário com este username criado no teste anterior.
       const duplicatedUserResponse = await fetch(
         "http://localhost:3000/api/v1/users",
         {
@@ -125,14 +102,13 @@ describe("Create a user via POST request to /users", () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            username: "UsernameDuplicado",
-            email: "duplicadousername@exemplo.com",
+            username: duplicatedUserInputValues.username,
+            email: "userduplicado1@exemplo.com",
             password: "senha123",
           }),
         },
       );
       const duplicatedUserResponseBody = await duplicatedUserResponse.json();
-      console.log(duplicatedUserResponseBody);
       expect(duplicatedUserResponse.status).toBe(400);
       expect(duplicatedUserResponseBody).toEqual({
         name: "ValidationError",
@@ -140,6 +116,37 @@ describe("Create a user via POST request to /users", () => {
         action:
           "Dados inválidos. Por favor, confira os dados e tente novamente.",
         status_code: 400,
+      });
+    });
+
+    describe("With a authenticated user", () => {
+      test("User authenticated", async () => {
+        const createdUser = await orchestrator.createActivatedUser();
+        const userSession = await orchestrator.createSession(createdUser.id);
+        const response = await fetch("http://localhost:3000/api/v1/users", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${userSession.token}`,
+          },
+          body: JSON.stringify({
+            username: "makeByAuthenticatedUser",
+            email: "makeByAuthenticatedUser@exemplo.com",
+            password: "senha@123",
+          }),
+        });
+
+        expect(response.status).toBe(403);
+
+        const responseBody = await response.json();
+        expect(responseBody).toEqual({
+          message:
+            "Acesso negado. Você não tem permissão para executar esta ação.",
+          name: "ForbiddenError",
+          action:
+            "Por favor, verifique suas permissões com os administradores ou entre em contato com o suporte.",
+          status_code: 403,
+        });
       });
     });
   });

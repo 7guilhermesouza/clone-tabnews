@@ -23,8 +23,7 @@ describe("GET to `api/v1/users/[username]`", () => {
       expect(responseBody).toEqual({
         id: responseBody.id,
         username: createdUser.username,
-        email: createdUser.email,
-        password: responseBody.password,
+        features: ["read:activation_token"],
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
@@ -42,8 +41,7 @@ describe("GET to `api/v1/users/[username]`", () => {
       expect(responseBody).toEqual({
         id: responseBody.id,
         username: createdUser.username,
-        email: createdUser.email,
-        password: responseBody.password,
+        features: ["read:activation_token"],
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
@@ -62,6 +60,57 @@ describe("GET to `api/v1/users/[username]`", () => {
         action:
           "Registros não encontrados. Por favor, confira os dados e tente novamente.",
         status_code: 404,
+      });
+    });
+  });
+
+  describe("With authenticated user", () => {
+    test("Get public data about yourself or other user", async () => {
+      const loggedUser = await orchestrator.createLoggedUser({
+        username: "loggedUser",
+      });
+      const anotherUser = await orchestrator.createUser({
+        username: "anotherUser",
+      });
+
+      const selfResponse = await fetch(
+        `http://localhost:3000/api/v1/users/${loggedUser.username}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${loggedUser.session.token}`,
+          },
+        },
+      );
+
+      expect(selfResponse.status).toBe(200);
+      const selfResponseBody = await selfResponse.json();
+      expect(selfResponseBody).toEqual({
+        id: loggedUser.id,
+        username: loggedUser.username,
+        features: loggedUser.features,
+        created_at: loggedUser.created_at.toISOString(),
+        updated_at: loggedUser.updated_at.toISOString(),
+      });
+
+      const othersResponse = await fetch(
+        `http://localhost:3000/api/v1/users/${anotherUser.username}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${loggedUser.session.token}`,
+          },
+        },
+      );
+
+      expect(othersResponse.status).toBe(200);
+      const othersResponseBody = await othersResponse.json();
+      expect(othersResponseBody).toEqual({
+        id: anotherUser.id,
+        username: anotherUser.username,
+        features: anotherUser.features,
+        created_at: anotherUser.created_at.toISOString(),
+        updated_at: anotherUser.updated_at.toISOString(),
       });
     });
   });

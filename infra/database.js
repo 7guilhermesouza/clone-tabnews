@@ -40,5 +40,34 @@ async function query(queryObject) {
   }
 }
 
-const database = { query, getNewClient };
+async function databaseIsReady() {
+  const query = await database.query("SELECT 1 AS status;");
+  if (query.rows[0].status) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+async function checkStatus() {
+  const version = await database.query("SHOW server_version;");
+  const maxConnections = await database.query("SHOW max_connections;");
+  const databaseName = process.env.POSTGRES_DB;
+  const openedConnections = await database.query({
+    text: "SELECT count(*)::int from pg_stat_activity where datname = $1;",
+    values: [databaseName],
+  });
+  return {
+    version: version.rows[0].server_version,
+    max_connections: Number(maxConnections.rows[0].max_connections),
+    opened_connections: openedConnections.rows[0].count,
+  };
+}
+
+const status = {
+  isReady: databaseIsReady,
+  check: checkStatus,
+};
+
+const database = { query, getNewClient, status };
 export default database;

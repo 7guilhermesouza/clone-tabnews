@@ -18,98 +18,97 @@ describe("DELETE to `/api/v1/sessions`", () => {
       },
     });
 
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(403);
+
     const responseBody = await response.json();
     expect(responseBody).toEqual({
-      name: "UnauthorizedError",
-      message: "Credenciais não confere.",
-      action: "Por favor, confira os dados enviados.",
-      status_code: 401,
+      message: "Acesso negado. Você não tem permissão para executar esta ação.",
+      name: "ForbiddenError",
+      action:
+        "Por favor, verifique suas permissões com os administradores ou entre em contato com o suporte.",
+      status_code: 403,
     });
   });
+});
 
-  test("With expired token", async () => {
-    jest.useFakeTimers({
-      now: new Date(Date.now() - session.EXPIRATION_IN_MILLISECONDS),
-    });
-
-    const createdUSer = await orchestrator.createUser();
-    const sessionObject = await orchestrator.createSession(createdUSer.id);
-
-    jest.useRealTimers();
-
-    const response = await fetch("http://localhost:3000/api/v1/sessions", {
-      method: "DELETE",
-      headers: {
-        Cookies: `session_id=${sessionObject.token}`,
-      },
-    });
-
-    expect(response.status).toBe(401);
-    const responseBody = await response.json();
-    expect(responseBody).toEqual({
-      name: "UnauthorizedError",
-      message: "Credenciais não confere.",
-      action: "Por favor, confira os dados enviados.",
-      status_code: 401,
-    });
+test("With expired token", async () => {
+  jest.useFakeTimers({
+    now: new Date(Date.now() - session.EXPIRATION_IN_MILLISECONDS),
   });
 
-  test("With valid token", async () => {
-    const createdUser = await orchestrator.createUser();
-    const sessionObject = await orchestrator.createSession(createdUser.id);
-    const response = await fetch("http://localhost:3000/api/v1/sessions", {
+  const createdUSer = await orchestrator.createUser();
+  const sessionObject = await orchestrator.createSession(createdUSer.id);
+
+  jest.useRealTimers();
+
+  const response = await fetch("http://localhost:3000/api/v1/sessions", {
+    method: "DELETE",
+    headers: {
+      Cookies: `session_id=${sessionObject.token}`,
+    },
+  });
+
+  expect(response.status).toBe(403);
+
+  const responseBody = await response.json();
+  expect(responseBody).toEqual({
+    message: "Acesso negado. Você não tem permissão para executar esta ação.",
+    name: "ForbiddenError",
+    action:
+      "Por favor, verifique suas permissões com os administradores ou entre em contato com o suporte.",
+    status_code: 403,
+  });
+});
+
+test("With valid token", async () => {
+  const createdUser = await orchestrator.createLoggedUser();
+  const response = await fetch("http://localhost:3000/api/v1/sessions", {
+    method: "DELETE",
+    headers: {
+      Cookie: `session_id=${createdUser.session.token}`,
+    },
+  });
+
+  expect(response.status).toBe(200);
+  const responseBody = await response.json();
+  expect(responseBody).toEqual({
+    expires_at: responseBody.expires_at,
+    created_at: createdUser.session.created_at.toISOString(),
+  });
+
+  const expiresAtBefore = new Date(createdUser.session.expires_at);
+  const expiresAtAfter = new Date(responseBody.expires_at);
+
+  expect(expiresAtBefore > expiresAtAfter).toBe(true);
+
+  //Set Cookies
+  const parsedSetCookie = setCookieParser(response, {
+    map: true,
+  });
+  expect(parsedSetCookie.session_id).toEqual({
+    name: "session_id",
+    value: "invalid",
+    maxAge: -1,
+    path: "/",
+    httpOnly: true,
+  });
+
+  //Double check
+  const responseDoubleCheck = await fetch(
+    "http://localhost:3000/api/v1/sessions",
+    {
       method: "DELETE",
       headers: {
-        Cookie: `session_id=${sessionObject.token}`,
+        Cookie: `session_id=${createdUser.session.token}`,
       },
-    });
-
-    expect(response.status).toBe(200);
-    const responseBody = await response.json();
-    expect(responseBody).toEqual({
-      id: sessionObject.id,
-      user_id: createdUser.id,
-      token: sessionObject.token,
-      expires_at: responseBody.expires_at,
-      created_at: sessionObject.created_at.toISOString(),
-      updated_at: responseBody.updated_at,
-    });
-
-    const expiresAtBefore = new Date(sessionObject.expires_at);
-    const expiresAtAfter = new Date(responseBody.expires_at);
-
-    expect(expiresAtBefore > expiresAtAfter).toBe(true);
-
-    //Set Cookies
-    const parsedSetCookie = setCookieParser(response, {
-      map: true,
-    });
-    expect(parsedSetCookie.session_id).toEqual({
-      name: "session_id",
-      value: "invalid",
-      maxAge: -1,
-      path: "/",
-      httpOnly: true,
-    });
-
-    //Double check
-    const responseDoubleCheck = await fetch(
-      "http://localhost:3000/api/v1/sessions",
-      {
-        method: "DELETE",
-        headers: {
-          Cookie: `session_id=${sessionObject.token}`,
-        },
-      },
-    );
-    expect(responseDoubleCheck.status).toBe(401);
-    const responseDoubleCheckBody = await responseDoubleCheck.json();
-    expect(responseDoubleCheckBody).toEqual({
-      name: "UnauthorizedError",
-      message: "Credenciais não confere.",
-      action: "Por favor, confira os dados enviados.",
-      status_code: 401,
-    });
+    },
+  );
+  expect(responseDoubleCheck.status).toBe(401);
+  const responseDoubleCheckBody = await responseDoubleCheck.json();
+  expect(responseDoubleCheckBody).toEqual({
+    name: "UnauthorizedError",
+    message: "Credenciais não confere.",
+    action: "Por favor, confira os dados enviados.",
+    status_code: 401,
   });
 });

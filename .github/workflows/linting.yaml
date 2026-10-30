@@ -13,7 +13,7 @@ jobs:
       - name: Setup of node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "lts/hydrogen"
+          node-version-file: "package.json"
       - name: Installing dependencies
         run: npm ci
       - name: Prettier check
@@ -27,7 +27,7 @@ jobs:
       - name: Setup of node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "lts/hydrogen"
+          node-version-file: "package.json"
       - name: Installing dependencies
         run: npm ci
       - name: eslint check
@@ -43,7 +43,7 @@ jobs:
       - name: Setup of node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "lts/hydrogen"
+          node-version-file: "package.json"
       - name: Installing dependencies
         run: npm ci
       - name: Validate PR commits with commitlint
